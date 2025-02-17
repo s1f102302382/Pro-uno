@@ -1,26 +1,29 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Document</title>
+    <title>Room macth</title>
+    <link rel="icon" href="{% static 'uno/img' %}">
 </head>
 <body>
-    <h1>This matching</h1>
-    <input id="room-name-input" type="text" size="100"><br>
-    <input id="room-name-submit" type="button" value="Enter">
-
-    <script>
-        document.querySelector('#room-name-input').focus();
-        document.querySelector('#room-name-input').onkeyup = function(e) {
-            if (e.keyCode === 13) {  // enter, return
-                document.querySelector('#room-name-submit').click();
-            }
-        };
-
-        document.querySelector('#room-name-submit').onclick = function(e) {
-            var roomName = document.querySelector('#room-name-input').value;
-            window.location.pathname = '/uno/' + roomName + '/';
-        };
-    </script>
+    <h1>This is room macth</h1>
+    <div>
+        <div class="deck">
+            <h>上のプレイヤーのデッキ</h>
+            <p><img src="{% static 'uno/img/355.jpg' %}" alt="緑のリバースカード"></p>
+        </div>
+        <div class="deck">
+            <h>右のプレイヤーのデッキ</h>
+        </div>
+        <div class="deck">
+            <h>下のプレイヤーのデッキ</h>
+        </div>
+        <div class="deck">
+            <h>左のプレイヤーのデッキ</h>
+        </div>
+    </div>
+    {{ room_name|json_script:"room-name" }}
+    <script type="text/javascript" src="{% static 'uno/js/game.js' %}"></script>
 </body>
 </html>

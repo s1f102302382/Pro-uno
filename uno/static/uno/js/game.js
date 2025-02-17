@@ -1,6 +1,13 @@
+let Socket;
+console.log("game.js is working!");
+
+function is_work(x) {
+    return x + 'is work!'
+}
+
 const roomName = JSON.parse(document.getElementById('room-name').textContent);
 
-const Websocket = function() {
+const initWebsocket = function() {
     Socket = new Websocket(
         'ws://'
         + window.location.host
@@ -17,7 +24,7 @@ const Websocket = function() {
 }
 
 const Listener = (Websocket) => {
-    Websocket.onmessage = (event) {
+    Websocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
 
         console.log("Listener is work");
@@ -29,4 +36,11 @@ const Listener = (Websocket) => {
             
         }
     }
+}
+
+const main = () => {
+    console.log("start main function");
+    initWebsocket();
+
+    Listener(Socket);
 }
