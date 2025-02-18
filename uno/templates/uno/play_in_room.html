@@ -1,0 +1,29 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Room macth</title>
+    <link rel="icon" href="{% static 'uno/img' %}">
+</head>
+<body>
+    <h1>This is room macth</h1>
+    <div>
+        <div class="deck">
+            <h>上のプレイヤーのデッキ</h>
+            <p><img src="{% static 'uno/img/355.jpg' %}" alt="緑のリバースカード"></p>
+        </div>
+        <div class="deck">
+            <h>右のプレイヤーのデッキ</h>
+        </div>
+        <div class="deck">
+            <h>下のプレイヤーのデッキ</h>
+        </div>
+        <div class="deck">
+            <h>左のプレイヤーのデッキ</h>
+        </div>
+    </div>
+    {{ room_name|json_script:"room-name" }}
+    <script type="text/javascript" src="{% static 'uno/js/game.js' %}"></script>
+</body>
+</html>
