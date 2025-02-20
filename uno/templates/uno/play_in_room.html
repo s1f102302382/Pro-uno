@@ -5,22 +5,22 @@
     <meta charset="UTF-8">
     <title>Room macth</title>
     <link rel="icon" href="{% static 'uno/img' %}">
+    <link rel="stylesheet" href="{% static 'uno/css/game.css' %}">
 </head>
 <body>
     <h1>This is room macth</h1>
-    <div>
-        <div class="deck">
+    <div class="continer">
+        <div class="deck upper">
             <h>上のプレイヤーのデッキ</h>
-            <p><img src="{% static 'uno/img/355.jpg' %}" alt="緑のリバースカード"></p>
         </div>
-        <div class="deck">
+        <div class="deck right">
             <h>右のプレイヤーのデッキ</h>
         </div>
-        <div class="deck">
-            <h>下のプレイヤーのデッキ</h>
-        </div>
-        <div class="deck">
+        <div class="deck left">
             <h>左のプレイヤーのデッキ</h>
+        </div>
+        <div class="deck your">
+            <h>下のプレイヤーのデッキ</h>
         </div>
     </div>
     {{ room_name|json_script:"room-name" }}
