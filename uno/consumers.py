@@ -89,6 +89,9 @@ class UNOConsumer(WebsocketConsumer):
             is_card_change_color = (card in self.COLOR_CHANGE)
             return (is_same_function_card or is_card_change_color) == True
 
+    def draw_n(self, n):
+        self.draw += n
+
     def apply_card_play(self, card):
         if (card in self.FUNCTION_CARD.key()):
             effect = self.FUNCTION_CARD[card]
@@ -101,16 +104,34 @@ class UNOConsumer(WebsocketConsumer):
         return self.next_turn(self, effect)
     
     def next_turn(self, effect):
-        self.current_turn = (self.current_turn + self.direction) % len(self.players)
+        if (effect == "skip"):
+            self.current_turn = (self.current_turn + self.direction * 2) % len(self.players)
+        elif (effect == "reverse"):
+            self.direction *= -1
+            self.current_turn = (self.current_turn + self.direction) % len(self.players)
+        elif (effect == "draw2"):
+            self.draw_n(self, 2)
+            self.current_turn = (self.current_turn + self.direction) % len(self.players)
+        elif (effect == "play_all_same_color"):
+            pass
+            # ここで全て同じ色のカードを出す
+            self.current_turn = (self.current_turn + self.direction) % len(self.players)
+        elif (effect == "change_color"):
+            self.current_turn = (self.current_turn + self.direction) % len(self.players)
+        elif (effect == "draw4"):
+            self.draw_n(self, 4)
+            self.current_turn = (self.current_turn + self.direction) % len(self.players)
     
     def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = "uno_%s" % self.room_name
-        self.players = {}
+        self.players = {}       # プレイヤーの管理
+        self.hands = {}         # プレイヤーごとの手札管理
         self.deck = self.create_initial_deck(40) # 山札
         self.discard_pile = [self.deck.pop()]
         self.current_turn = 0   # 現在のターン
         self.direction = 1      # 進行方向　時計回りだと１，反時計回りだと-1
+        self.draw = 0
         # Join room group
         async_to_sync(self.channel_layer.group_add)(
             self.room_group_name, self.channel_name
@@ -124,12 +145,41 @@ class UNOConsumer(WebsocketConsumer):
         )
 
     def receive(self, text_data):
-        text_data_json = json.loads(text_data)
-        message = text_data_json["message"]
-        # Send message to room group
-        #self.send(text_data=json.dumps({"message": message}))
+        data = json.loads(text_data)
+        action = data.get("action")
+        player = data.get("player")
+
+        if action == "join":
+            print("プレイヤーが接続しました")
+            self.hands[player] = self.create_initial_deck(self.number_of_initial_deck)
+            # self.hands -> {playername: [cardlist]}
+
+            self.players[player] = {"hand": self.hands[player]}
+            # self.players -> {playername: {"hand": [card]}}
+        elif action == "play_card":
+            card = data.get("card")
+            if self.is_valid_play(card):
+                self.hands[player].remove(card)
+                self.discard_pile.append(card)
+                self.apply_card_play(card)
+            self.send_game_update(player)
+
+    def send_game_update(self, cuurent_player=None):
+        masked_player = {}
+        for player_name in self.players:
+            if player_name == cuurent_player:
+                masked_player[player_name] = self.players[player_name]
+            else:
+                masked_player[player_name] = len(self.players[player_name])
+        
+        update = {
+            "turn": self.current_turn,
+            "player": masked_player,
+            "top_card": self.discard_pile[-1],
+        }
         async_to_sync(self.channel_layer.group_send)(
-            self.room_group_name, {"type": ""}
+            self.room_group_name,
+            {"type": "game_update", "message": json.dumps(update)}
         )
 
     def game_update(self, event):

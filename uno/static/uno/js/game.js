@@ -8,10 +8,10 @@ function is_work(x) {
 const roomName = JSON.parse(document.getElementById('room-name').textContent);
 
 const initWebsocket = function() {
-    Socket = new Websocket(
+    Socket = new WebSocket(
         'ws://'
         + window.location.host
-        + '/ws/uno/'
+        + '/ws/uno/room_index/'
         + roomName
         + '/'
     );
@@ -28,19 +28,15 @@ const Listener = (Websocket) => {
         const data = JSON.parse(event.data);
 
         console.log("Listener is work");
-
-        switch(data) {
-            case '':
-                // pass
-                break;
-            
-        }
     }
 }
 
 const main = () => {
     console.log("start main function");
     initWebsocket();
-
     Listener(Socket);
+
+    
 }
+
+window.onload = main;
