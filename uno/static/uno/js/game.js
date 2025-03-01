@@ -38,6 +38,8 @@ const Listener = (Websocket) => {
         const data = JSON.parse(event.data);
         //console.log("get data form server is\n", data);
         const yourhand = data.player[playerName].hand;
+        const top_card = data.top_card;
+        console.log(top_card);
         //let yourhand1 = yourhand[0]
         console.log("your hand is:", yourhand);
         //console.log("Listener is work");
@@ -68,8 +70,28 @@ const show_your_hand = (cards) => {
         img.alt = `${card}のカード`;
 
         div.appendChild(img);
+        div.addEventListener('click', () => play_card(card));
         yourdeckarea.appendChild(div);
     });
+}
+
+const show_top_card = (card) => {
+    const topcardarea = document.querySelector('.top-card');
+    const img = document.createElement('img');
+    img.src = staticUrl + `${card}.jpg`;
+    img.alt = `${card}のカード`;
+
+    topcardarea.innerHTML.appendChild(img);
+}
+
+const play_card = (card) => {
+    console.log("playe_card function is work!");
+    console.log("you played card is", card);
+    UNOSocket.send(JSON.stringify({
+        action: 'play_card',
+        card: card,
+        player: playerName,
+    }));
 }
 
 const main = () => {

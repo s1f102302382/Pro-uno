@@ -37,10 +37,11 @@ class UNOConsumer(WebsocketConsumer):
         return random.sample(deck, k=number)
 
     def is_valid_play(self, card):
+        print("is_valid_play に飛びました")
         top_card = self.discard_pile[-1]
-        
+        print("現在の捨札の一番上は", top_card)
         # 先に数字カードの判定をします
-        is_both_number = (card < 40 & top_card < 40)
+        is_both_number = (card < 40 and top_card < 40)
 
         # もし数字であれば40より小さいので10で割った商で色を選択判別できる
         if (is_both_number ==  True):
@@ -128,7 +129,7 @@ class UNOConsumer(WebsocketConsumer):
         data = json.loads(text_data)
         action = data.get("action")
         player = data.get("player")
-
+        print("現在のカードを出したプレイヤーは", player)
         if action == "join":
             if player not in self.players:
                 print(player, "が接続しました")
@@ -139,6 +140,7 @@ class UNOConsumer(WebsocketConsumer):
                 # self.players -> {playername: {"hand": [card]}}
             else:
                 print(player, "はすでに存在しています")
+
             print("self.player:", self.players)
             print("self.hands:", self.hands)
             print("self.deck:", self.deck)
@@ -157,10 +159,17 @@ class UNOConsumer(WebsocketConsumer):
             """
             self.send_game_update(player)
         elif action == "play_card":
+            print("カードを受け取りました！")
             card = data.get("card")
+            print("このカードを受け取りました", card)
+            print("is_valid_playの真偽値は", self.is_valid_play(card))
             if self.is_valid_play(card):
+                print("現在の手札は", self.hands[player])
                 self.hands[player].remove(card)
+                print("カードを出した現在の手札は", self.hands[player])
                 self.discard_pile.append(card)
+                #print("このプレイヤーの手札は", self.hands[player])
+                #print("現在の捨て札の一番上は", self.discard_pile[-1])
                 self.apply_card_play(card)
             self.send_game_update(player)
 

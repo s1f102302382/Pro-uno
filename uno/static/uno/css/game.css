@@ -39,6 +39,12 @@
     transform: translateY(-50%);
 }
 
+/* 真ん中に配置 */
+.center {
+    
+}
+
+
 /* 左側に配置 */
 .left {
     top: 50%;
