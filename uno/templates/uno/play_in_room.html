@@ -23,6 +23,7 @@
         </div>
     </div>
     {{ room_name|json_script:"room-name" }}
+    {{ player_name|json_script:"player-name" }}
     <script type="text/javascript" src="{% static 'uno/js/game.js' %}"></script>
 </body>
 </html>
