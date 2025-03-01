@@ -9,21 +9,24 @@
 <body>
     <h1>This is room macth</h1>
     <div class="continer">
-        <div class="deck upper">
+        <div class="handcontainer upper">
             <h>上のプレイヤーのデッキ</h>
         </div>
-        <div class="deck right">
+        <div class="handcontainer right">
             <h>右のプレイヤーのデッキ</h>
         </div>
-        <div class="deck left">
+        <div class="handcontainer left">
             <h>左のプレイヤーのデッキ</h>
         </div>
-        <div class="deck your">
+        <div class="handcontainer your">
             <h>下のプレイヤーのデッキ</h>
         </div>
     </div>
     {{ room_name|json_script:"room-name" }}
     {{ player_name|json_script:"player-name" }}
+    <!--静的ファイルのパスを JavaScript に渡す-->
+    <script>const staticUrl = "{% static 'uno/img/' %}";</script>
+
     <script type="text/javascript" src="{% static 'uno/js/game.js' %}"></script>
 </body>
 </html>

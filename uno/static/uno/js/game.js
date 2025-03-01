@@ -38,9 +38,13 @@ const Listener = (Websocket) => {
         const data = JSON.parse(event.data);
         //console.log("get data form server is\n", data);
         const yourhand = data.player[playerName].hand;
-        //console.log("your hand is:", yourhand);
+        //let yourhand1 = yourhand[0]
+        console.log("your hand is:", yourhand);
         //console.log("Listener is work");
-    }
+        //console.log("show_your_handが実行される前")
+        show_your_hand(yourhand);
+        //console.log("show_your_handが実行されました。")
+}
 }
 
 const sent_join = (PLAYERNAME) => {
@@ -50,13 +54,22 @@ const sent_join = (PLAYERNAME) => {
     }));
 }
 
-const show_your_hand = (array) => {
+const show_your_hand = (cards) => {
     const yourdeckarea = document.querySelector('.your');
     yourdeckarea.innerHTML = '';
 
-    for (let i=0; i < array.length; i++) {
-        
-    }
+    cards.forEach(card => {
+        const div = document.createElement('div');
+        div.className = 'card';
+        const img = document.createElement('img');
+
+        //img.src = `{% static 'uno/img/${card}.jpg' %}`;
+        img.src = staticUrl + `${card}.jpg`;      // Django の static URL を使って画像のパスを生成
+        img.alt = `${card}のカード`;
+
+        div.appendChild(img);
+        yourdeckarea.appendChild(div);
+    });
 }
 
 const main = () => {
