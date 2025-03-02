@@ -1,6 +1,6 @@
 let UNOSocket;
 //console.log("game.js is working!");
-
+let tmphand;
 const roomName = JSON.parse(document.getElementById('room-name').textContent);
 const playerName = JSON.parse(document.getElementById('player-name').textContent);
 //console.log(playerName);
@@ -13,7 +13,7 @@ const initWebsocket = function() {
         + roomName
         + '/'
     );
-    console.log("creat s webSocket");
+    //console.log("creat s webSocket");
 
     UNOSocket.onopen = () => {
         console.log("websocket connect");
@@ -36,15 +36,29 @@ const Listener = (Websocket) => {
     // サーバーからデータを受信
     Websocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        //console.log("get data form server is\n", data);
-        const yourhand = data.player[playerName].hand;
+        console.log("get data form server is\n", data);
+        const yourhand = data.player[playerName]?.hand;
+        //console.log(yourhand);
+        console.log("if yourhand === nullを実行前");
+        if (!yourhand) {    // もし自分宛じゃなければ、保存した手札を使う;
+            console.log("if yourhand === nullを実行中 --------------------ifを実行");
+            console.log("tmphand is", tmphand);
+            show_your_hand(tmphand);
+        } else {                    // 
+            console.log("---------------------elseを実行");
+            show_your_hand(yourhand);
+            console.log("before change tmphand is", tmphand);
+            tmphand = [...yourhand];
+            console.log("after change tmpcard is ", tmphand);
+        }
         const top_card = data.top_card;
-        console.log(top_card);
+        show_top_card(top_card);
+        console.log("top_card is", top_card);
         //let yourhand1 = yourhand[0]
         console.log("your hand is:", yourhand);
         //console.log("Listener is work");
         //console.log("show_your_handが実行される前")
-        show_your_hand(yourhand);
+        //show_your_hand(yourhand);
         //console.log("show_your_handが実行されました。")
 }
 }
@@ -77,11 +91,12 @@ const show_your_hand = (cards) => {
 
 const show_top_card = (card) => {
     const topcardarea = document.querySelector('.top-card');
+    topcardarea.innerHTML = '';
     const img = document.createElement('img');
     img.src = staticUrl + `${card}.jpg`;
     img.alt = `${card}のカード`;
 
-    topcardarea.innerHTML.appendChild(img);
+    topcardarea.appendChild(img);
 }
 
 const play_card = (card) => {
@@ -95,7 +110,7 @@ const play_card = (card) => {
 }
 
 const main = () => {
-    console.log("start main function");
+    //console.log("start main function");
     initWebsocket();
 
 

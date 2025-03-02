@@ -40,8 +40,18 @@
 }
 
 /* 真ん中に配置 */
-.center {
-    
+.centercontainer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150px; /* 必要に応じてサイズ調整 */
+    height: 150px;
+    background-color: #fff; /* 背景色 */
+    border: 2px solid #000; /* 枠線 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 
