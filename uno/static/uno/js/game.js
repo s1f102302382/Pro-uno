@@ -37,30 +37,68 @@ const Listener = (Websocket) => {
     Websocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         console.log("get data form server is\n", data);
+        switch(data.type) {
+            case 'game-update':
+                const isMyTurn = (data.next_player === playerName);
+                document.querySelectorAll('.card').forEach(card => {
+                    card.style.opacity = isMyTurn ? 1 : 0.5;
+                    card.style.pointerEvents = isMyTurn ? 'all' : 'none';
+                });
+                
+                const yourhand = data.player[playerName]?.hand;
+
+                if (!yourhand) {    // もし自分宛じゃなければ、保存した手札を使う;
+                    //console.log("if yourhand === nullを実行中 --------------------ifを実行");
+                    //console.log("tmphand is", tmphand);
+                    show_your_hand(tmphand);
+                } else {                    // 
+                    //console.log("---------------------elseを実行");
+                    show_your_hand(yourhand);
+                    //console.log("before change tmphand is", tmphand);
+                    tmphand = [...yourhand];
+                    //console.log("after change tmpcard is ", tmphand);
+                }
+                const top_card = data.top_card;
+                show_top_card(top_card);
+
+                break;
+            case 'error':
+                alert("あなたのターンではありません");
+                break;
+        }
+
+        /*
+        const isMyTurn = (data.next_player === playerName);
+        document.querySelectorAll('.card').forEach(card => {
+            card.style.opacity = isMyTurn ? 1 : 0.5;
+            card.style.pointerEvents = isMyTurn ? 'all' : 'none';
+        });
+        console.log("get data form server is\n", data);
         const yourhand = data.player[playerName]?.hand;
         //console.log(yourhand);
-        console.log("if yourhand === nullを実行前");
+        //console.log("if yourhand === nullを実行前");
         if (!yourhand) {    // もし自分宛じゃなければ、保存した手札を使う;
-            console.log("if yourhand === nullを実行中 --------------------ifを実行");
-            console.log("tmphand is", tmphand);
+            //console.log("if yourhand === nullを実行中 --------------------ifを実行");
+            //console.log("tmphand is", tmphand);
             show_your_hand(tmphand);
         } else {                    // 
-            console.log("---------------------elseを実行");
+            //console.log("---------------------elseを実行");
             show_your_hand(yourhand);
-            console.log("before change tmphand is", tmphand);
+            //console.log("before change tmphand is", tmphand);
             tmphand = [...yourhand];
-            console.log("after change tmpcard is ", tmphand);
+            //console.log("after change tmpcard is ", tmphand);
         }
         const top_card = data.top_card;
         show_top_card(top_card);
-        console.log("top_card is", top_card);
+        //console.log("top_card is", top_card);
         //let yourhand1 = yourhand[0]
-        console.log("your hand is:", yourhand);
+        //console.log("your hand is:", yourhand);
         //console.log("Listener is work");
         //console.log("show_your_handが実行される前")
         //show_your_hand(yourhand);
         //console.log("show_your_handが実行されました。")
-}
+        */
+    }
 }
 
 const sent_join = (PLAYERNAME) => {
@@ -72,6 +110,15 @@ const sent_join = (PLAYERNAME) => {
 
 const show_your_hand = (cards) => {
     const yourdeckarea = document.querySelector('.your');
+    /*
+    const existingCards = yourdeckarea.querySelectorAll('.card img');
+
+    if (existingCards.length === cards.length 
+        &&
+        [...existingCards].every((img.alt) === `${cards[i]}のカード`)) {
+            return;// 変更がなければ更新しない
+        }
+    */
     yourdeckarea.innerHTML = '';
 
     cards.forEach(card => {

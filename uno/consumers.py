@@ -58,7 +58,7 @@ class UNOConsumer(WebsocketConsumer):
         elif (card < 40 and top_card >= 40):
             # 前のカードは特別カードで自分のカードは数字カードの場合
             # -> 同じ色
-            is_same_color = (card // 10 and top_card // 100)
+            is_same_color = (card // 10 == top_card // 100)
             return (is_same_color) == True
         #elif (card >= 40 and top_card >= 40):
         else:
@@ -66,25 +66,31 @@ class UNOConsumer(WebsocketConsumer):
             # -> 同じ特別カードかまたは色を変えれるカードか
             is_same_function_card = (card % 100 == top_card % 100)
             is_card_change_color = (card in self.COLOR_CHANGE)
-            return (is_same_function_card or is_card_change_color) == True
+            is_same_color = (card // 100 == top_card //100)
+            return (is_same_function_card or is_card_change_color or is_same_color) == True
 
     def draw_n(self, n):
         self.draw += n
 
     def apply_card_play(self, card):
-        if (card in self.FUNCTION_CARD.keys()):
-            effect = self.FUNCTION_CARD[card]
+        print("apply_card_playに入りました")
+        print("このカードを受け取りました", card)
+        tmpcard = card % 100
+        if (tmpcard in self.FUNCTION_CARD.keys()):
+            effect = self.FUNCTION_CARD[tmpcard]
             print("機能カードです")
-        elif(card in self.COLOR_CHANGE.keys()):
-            effect = self.COLOR_CHANGE[card]
+        elif(tmpcard in self.COLOR_CHANGE.keys()):
+            effect = self.COLOR_CHANGE[tmpcard]
             print("色を変更できるカードです")
         else:
             # 数字カードの場合は何も効果がない
+            print("数字カードです")
             effect = "None"
         
         return self.next_turn(effect)
     
     def next_turn(self, effect):
+        '''
         print("next_turn関数に飛びました!")
         if (effect == "skip"):
             print("skipカードが出されました")
@@ -113,7 +119,35 @@ class UNOConsumer(WebsocketConsumer):
             # 何もなければ数字カードです
             print("数字カードのため通常進行します")
             self.current_turn = (self.current_turn + self.direction) % len(self.players)
-        
+        '''
+        print("next_turn関数に飛びました!")
+        if (effect == "skip"):
+            print("skipカードが出されました")
+            UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction * 2) % len(UNOConsumer.players)
+        elif (effect == "reverse"):
+            print("reverseカードが出されました")
+            UNOConsumer.direction *= -1
+            UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction) % len(UNOConsumer.players)
+        elif (effect == "draw2"):
+            print("draw2カードが出されました\nまだdraw関数が完成されていませんので実装を楽しみに待ってください")
+            #self.draw_n(self, 2)
+            UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction) % len(UNOConsumer.players)
+        elif (effect == "play_all_same_color"):
+            print("play_all_same_colorカードが出されました")
+            pass
+            # ここで全て同じ色のカードを出す
+            UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction) % len(UNOConsumer.players)
+        elif (effect == "change_color"):
+            print("change_colorカードが出されました")
+            UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction) % len(UNOConsumer.players)
+        elif (effect == "draw4"):
+            print("draw4カードが出されました")
+            #self.draw_n(self, 4)
+            UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction) % len(UNOConsumer.players)
+        else:
+            # 何もなければ数字カードです
+            print("数字カードのため通常進行します")
+            UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction) % len(UNOConsumer.players)
         #return self.players_turn[self.current_turn]
 
     
@@ -166,11 +200,11 @@ class UNOConsumer(WebsocketConsumer):
             print("self.player:", self.players)
             print("self.players_turn", self.players_turn)
             print("self.hands:", self.hands)
-            print("self.deck:", self.deck)
+            #print("self.deck:", self.deck)
             print("self.discard_pile", self.discard_pile)
             print("self.current_turn:", self.current_turn)
             print("self.direction:", self.direction)
-            print("self.draw:", self.draw)
+            #print("self.draw:", self.draw)
             """
             self.players = {}       # プレイヤーの管理
             self.hands = {}         # プレイヤーごとの手札管理
@@ -182,6 +216,25 @@ class UNOConsumer(WebsocketConsumer):
             """
             self.send_game_update(player)
         elif action == "play_card":
+            current_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
+            print("play_cardが実行されて\nカードを出せる人は", current_player)
+            print("player is", player)
+            if player != current_player:
+                response = {
+                    "type": "error",
+                    "message": "現在はあなたのターンではありません"
+                }
+                self.send(text_data=json.dumps(response))
+                print("response is:", response)
+                print("--------------------------")
+                print("self.player:", self.players)
+                print("self.players_turn", self.players_turn)
+                print("self.hands:", self.hands)
+                #print("self.deck:", self.deck)
+                print("self.discard_pile", self.discard_pile)
+                print("self.current_turn:", self.current_turn)
+                print("self.direction:", self.direction)
+                return
             # print("カードを受け取りました！")
             card = data.get("card")
             print("このカードを受け取りました", card)
@@ -194,6 +247,13 @@ class UNOConsumer(WebsocketConsumer):
                 #print("このプレイヤーの手札は", self.hands[player])
                 #print("現在の捨て札の一番上は", self.discard_pile[-1])
                 self.apply_card_play(card)      # カードを判定する関数
+                print("self.player:", self.players)
+                print("self.players_turn", self.players_turn)
+                print("self.hands:", self.hands)
+                #print("self.deck:", self.deck)
+                print("self.discard_pile", self.discard_pile)
+                print("self.current_turn:", self.current_turn)
+                print("self.direction:", self.direction)
             self.send_game_update(player)
 
     def send_game_update(self, cuurent_player=None):
@@ -205,6 +265,7 @@ class UNOConsumer(WebsocketConsumer):
                 masked_player[player_name] = len(self.players[player_name])
         
         update = {
+            "type": "game-update",
             "turn": self.current_turn,
             "next_player": self.players_turn[self.current_turn],
             "player": masked_player,
