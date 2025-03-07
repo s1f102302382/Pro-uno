@@ -1,6 +1,7 @@
 let UNOSocket;
 //console.log("game.js is working!");
 let tmphand;
+let selectedCard = null;
 const roomName = JSON.parse(document.getElementById('room-name').textContent);
 const playerName = JSON.parse(document.getElementById('player-name').textContent);
 //console.log(playerName);
@@ -20,7 +21,7 @@ const initWebsocket = function() {
         Listener(UNOSocket);
         // ちゃんと接続後に'send_join'を実行
         sent_join(playerName);
-    }
+    };
 
     UNOSocket.onerror = function(error) {
         console.log("websocket error", error);
@@ -28,9 +29,9 @@ const initWebsocket = function() {
     
     UNOSocket.onclose = function() {
         console.log("websocket is closed!");
-    }
+    };
 
-}
+};
 
 const Listener = (Websocket) => {
     // サーバーからデータを受信
@@ -99,14 +100,14 @@ const Listener = (Websocket) => {
         //console.log("show_your_handが実行されました。")
         */
     }
-}
+};
 
 const sent_join = (PLAYERNAME) => {
     UNOSocket.send(JSON.stringify({
         action: 'join',
         player: PLAYERNAME
     }));
-}
+};
 
 const show_your_hand = (cards) => {
     const yourdeckarea = document.querySelector('.your');
@@ -134,7 +135,7 @@ const show_your_hand = (cards) => {
         div.addEventListener('click', () => play_card(card));
         yourdeckarea.appendChild(div);
     });
-}
+};
 
 const show_top_card = (card) => {
     const topcardarea = document.querySelector('.top-card');
@@ -144,15 +145,72 @@ const show_top_card = (card) => {
     img.alt = `${card}のカード`;
 
     topcardarea.appendChild(img);
-}
+};
 
 const play_card = (card) => {
     console.log("playe_card function is work!");
+    if (card === 80 || card === 90) {    // 80, 90 はワイルドカード
+        // ここで画面に色を選択するようにな感じのものが出てくる
+        // red = 0, bule = 1, yellow = 2, green = 3
+        // color = 選択した色 * 100;
+        // card += color:
+        selectedCard = card;    // 選択待ちカードを保存
+        document.getElementById("color-picker").style.display = "block";  // 色選択UIを表示
+        return;     // すぐには送信せずに待機
+    }
     console.log("you played card is", card);
+    /*
     UNOSocket.send(JSON.stringify({
         action: 'play_card',
         card: card,
         player: playerName,
+    }));
+    */
+   sendCardToServer(card);
+};
+
+const selectColor = (color) => {
+    if (selectedCard !== null) {
+        selectedCard += color * 100;    // 選択した色を加算
+        sendCardToServer(selectedCard);
+        selectedCard = null;    // クリア
+        document.getElementById("color-picker").style.display = "none";     // UIを非表示
+    }
+};
+
+// サーバーにカードを送信する関数
+const sendCardToServer = (card) => {
+    console.log("sendCardToServer function is called!");
+    console.log("you played card is", card);
+
+    // もし接続ができてない場合
+    if (!UNOSocket || UNOSocket.readyState !== WebSocket.OPEN) {
+        console.error("WebSocket is not open. Cannot send message.");
+        return;
+    }
+
+    const message = JSON.stringify({
+        action: 'play_card',
+        card: card,
+        player: playerName,
+    });
+    /*
+        UNOSocket.send(JSON.stringify({
+        action: 'play_card',
+        card: card,
+        player: playerName,
+    }));
+    */
+
+    console.log("Sending message", message);
+    UNOSocket.send(message);
+};
+
+const draw_card = () => {
+    console.log("draw_card function is work!");
+    UNOSocket.send(JSON.stringify({
+        action: 'draw',
+        player: playerName
     }));
 }
 

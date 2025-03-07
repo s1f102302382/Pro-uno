@@ -17,7 +17,13 @@
         </div>
         <div class="centercontainer">
             <div class="top-card"></div>
-            <div class="drawcard">draw card</div>
+            <div class="drawcard" onclick="draw_card()">draw card</div>
+            <div id="color-picker" class="color-picker" style="display: none;">
+                <button onclick="selectColor(0)">Red</button>
+                <button onclick="selectColor(1)">Blue</button>
+                <button onclick="selectColor(2)">Yellow</button>
+                <button onclick="selectColor(3)">Green</button>
+            </div>            
         </div>
         <div class="handcontainer left">
             <h>左のプレイヤーのデッキ</h>

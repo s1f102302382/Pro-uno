@@ -18,7 +18,7 @@ class UNOConsumer(WebsocketConsumer):
     COLOR_CHANGE = {80: "change_color", 90: "draw4"}
 
     players = {}       # プレイヤーの管理：手札などを含めて
-    players_turn = []
+    players_turn = []  # ターンを管理するために
     hands = {}         # プレイヤーごとの手札管理
     deck = []          # 山札
     discard_pile = []  # 捨て札の山
@@ -29,7 +29,7 @@ class UNOConsumer(WebsocketConsumer):
     # red = 0, bule = 1, yellow = 2, green = 3
     # function card
     # skip = 40, reverse = 50, draw2 = 60, play_all_same_color = 70, change_color = 80, draw4 = 90
-    
+
     def create_initial_deck(self, number):
         deck = [i + c * 10 for c in self.COLOR for i in range(0, 10)]
         deck += [i * 100 + F for i in range(0, len(self.COLOR)) for F in self.FUNCTION_CARD]
@@ -69,72 +69,69 @@ class UNOConsumer(WebsocketConsumer):
             is_same_color = (card // 100 == top_card //100)
             return (is_same_function_card or is_card_change_color or is_same_color) == True
 
-    def draw_n(self, n):
-        self.draw += n
+    def draw_n(self, player ,n):
+        UNOConsumer.hands[player] += (UNOConsumer.deck[:n])
+        del UNOConsumer.deck[:n]                          # 引いたカードを山札から削除する
 
     def apply_card_play(self, card):
         print("apply_card_playに入りました")
         print("このカードを受け取りました", card)
         tmpcard = card % 100
-        if (tmpcard in self.FUNCTION_CARD.keys()):
-            effect = self.FUNCTION_CARD[tmpcard]
-            print("機能カードです")
-        elif(tmpcard in self.COLOR_CHANGE.keys()):
-            effect = self.COLOR_CHANGE[tmpcard]
-            print("色を変更できるカードです")
+        special_card = {}
+        special_card.update(UNOConsumer.FUNCTION_CARD)
+        special_card.update(UNOConsumer.COLOR_CHANGE)
+
+        if (tmpcard in special_card.keys()):
+            effect = special_card[tmpcard]
+
+            if effect == "draw2":
+                self.next_turn(effect)
+                UNOConsumer.draw += 2
+                next_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
+                if self.check_next_player_have_draw2_or_draw4(next_player, 'two') == False:
+                    # もし次のプレイヤーが対抗できるカードdraw2またはdraw4を持ってないならば
+                    # 次のプレイヤーは手札が増える
+                    self.draw_n(next_player, UNOConsumer.draw)
+                    UNOConsumer.draw = 0    # 使い終わったら初期値に戻す
+                    effect = "none"
+
+            elif effect == "draw4":
+                self.next_turn(effect)
+                UNOConsumer.draw += 4
+                next_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
+                if self.check_next_player_have_draw2_or_draw4(next_player, 'two') == False:
+                    # もし次のプレイヤーが対抗できるカードdraw2またはdraw4を持ってないならば
+                    # 次のプレイヤーは手札が増える
+                    self.draw_n(next_player, UNOConsumer.draw)
+                    UNOConsumer.draw = 0    # 使い終わったら初期値に戻す
+                    effect = "none"
+            print("--------------------------------------------effect is", effect)
         else:
-            # 数字カードの場合は何も効果がない
-            print("数字カードです")
-            effect = "None"
+            effect = "none"
+            print("--------------------------------------------effect is", effect)
         
         return self.next_turn(effect)
+ 
     
     def next_turn(self, effect):
-        '''
-        print("next_turn関数に飛びました!")
-        if (effect == "skip"):
-            print("skipカードが出されました")
-            self.current_turn = (self.current_turn + self.direction * 2) % len(self.players)
-        elif (effect == "reverse"):
-            print("reverseカードが出されました")
-            self.direction *= -1
-            self.current_turn = (self.current_turn + self.direction) % len(self.players)
-        elif (effect == "draw2"):
-            print("draw2カードが出されました\nまだdraw関数が完成されていませんので実装を楽しみに待ってください")
-            #self.draw_n(self, 2)
-            self.current_turn = (self.current_turn + self.direction) % len(self.players)
-        elif (effect == "play_all_same_color"):
-            print("play_all_same_colorカードが出されました")
-            pass
-            # ここで全て同じ色のカードを出す
-            self.current_turn = (self.current_turn + self.direction) % len(self.players)
-        elif (effect == "change_color"):
-            print("change_colorカードが出されました")
-            self.current_turn = (self.current_turn + self.direction) % len(self.players)
-        elif (effect == "draw4"):
-            print("draw4カードが出されました")
-            #self.draw_n(self, 4)
-            self.current_turn = (self.current_turn + self.direction) % len(self.players)
-        else:
-            # 何もなければ数字カードです
-            print("数字カードのため通常進行します")
-            self.current_turn = (self.current_turn + self.direction) % len(self.players)
-        '''
         print("next_turn関数に飛びました!")
         if (effect == "skip"):
             print("skipカードが出されました")
             UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction * 2) % len(UNOConsumer.players)
         elif (effect == "reverse"):
             print("reverseカードが出されました")
-            UNOConsumer.direction *= -1
-            UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction) % len(UNOConsumer.players)
+            if len(UNOConsumer.players_turn) == 2:      # もし参加人数が2二人の場合はskipカードと同じ効果である
+                print("参加人数が二人のためreverseカードはskipカードと同じ効果を持つ")
+                UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction * 2) % len(UNOConsumer.players)
+            else:
+                UNOConsumer.direction *= -1
+                UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction) % len(UNOConsumer.players)
         elif (effect == "draw2"):
-            print("draw2カードが出されました\nまだdraw関数が完成されていませんので実装を楽しみに待ってください")
-            #self.draw_n(self, 2)
+            #print("draw2カードが出されました\nまだdraw関数が完成されていませんので実装を楽しみに待ってください")
+            print("draw2カードが出されました")
             UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction) % len(UNOConsumer.players)
         elif (effect == "play_all_same_color"):
             print("play_all_same_colorカードが出されました")
-            pass
             # ここで全て同じ色のカードを出す
             UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction) % len(UNOConsumer.players)
         elif (effect == "change_color"):
@@ -150,6 +147,18 @@ class UNOConsumer(WebsocketConsumer):
             UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction) % len(UNOConsumer.players)
         #return self.players_turn[self.current_turn]
 
+    def check_next_player_have_draw2_or_draw4(self, player, two_or_four):
+        #self.hands[player]
+        tmp = [card % 100 for card in self.hands[player]]
+        
+        if (two_or_four == 'two'):  # 前の人がdraw2を出したから、draw2またはdraw4がないといけない
+            if (60 or 90) in tmp:
+                return True
+            return False
+        else:                       # 前の人がdraw4を出したから、draw4がないといけない
+            if (90) in tmp:
+                return True
+            return False
     
     def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
@@ -197,23 +206,15 @@ class UNOConsumer(WebsocketConsumer):
             else:
                 print(player, "はすでに存在しています")
 
-            print("self.player:", self.players)
-            print("self.players_turn", self.players_turn)
-            print("self.hands:", self.hands)
-            #print("self.deck:", self.deck)
-            print("self.discard_pile", self.discard_pile)
-            print("self.current_turn:", self.current_turn)
-            print("self.direction:", self.direction)
-            #print("self.draw:", self.draw)
-            """
-            self.players = {}       # プレイヤーの管理
-            self.hands = {}         # プレイヤーごとの手札管理
-            self.deck = self.create_initial_deck(40) # 山札
-            self.discard_pile = [self.deck.pop()]
-            self.current_turn = 0   # 現在のターン
-            self.direction = 1      # 進行方向  時計回りだと１，反時計回りだと-1
-            self.draw= 0
-            """
+            print("self.player:", self.players)             # プレイヤーの管理
+            print("self.players_turn", self.players_turn)   # プレイヤーごとの手札管理
+            print("self.hands:", self.hands)                # ターンを管理するためのリスト
+            #print("self.deck:", self.deck)                 # 山札
+            print("self.discard_pile", self.discard_pile)   # 捨て札山
+            print("self.current_turn:", self.current_turn)  # 現在のターン
+            print("self.direction:", self.direction)        # 進行方向  時計回りだと１，反時計回りだと-1
+            #print("self.draw:", self.draw)                 # 引くカードの数の管理
+
             self.send_game_update(player)
         elif action == "play_card":
             current_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
@@ -255,6 +256,15 @@ class UNOConsumer(WebsocketConsumer):
                 print("self.current_turn:", self.current_turn)
                 print("self.direction:", self.direction)
             self.send_game_update(player)
+        
+        elif action == "draw":   #出せるカードがなくて、山札から一枚引く
+            UNOConsumer.draw = 1
+            self.draw_n(player, UNOConsumer.draw)
+            UNOConsumer.draw = 0                    # カードを引いた後はデフォルト値0に戻す
+            self.next_turn("none")
+            self.send_game_update(player)
+
+
 
     def send_game_update(self, cuurent_player=None):
         masked_player = {}
