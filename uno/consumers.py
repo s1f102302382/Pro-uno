@@ -109,9 +109,9 @@ class UNOConsumer(WebsocketConsumer):
                 UNOConsumer.draw += 4
                 next_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
                 print("次のプレイヤーは", next_player)
-                print("次のプレイヤーが対抗できるdraw2またはdraw4を持っていますかの判別結果は", 
-                    self.check_next_player_have_draw2_or_draw4(next_player, 'two'))
-                if self.check_next_player_have_draw2_or_draw4(next_player, 'two') == False:
+                print("次のプレイヤーが対抗できるdraw4を持っていますかの判別結果は", 
+                    self.check_next_player_have_draw2_or_draw4(next_player, 'four'))
+                if self.check_next_player_have_draw2_or_draw4(next_player, 'four') == False:
                     # もし次のプレイヤーが対抗できるカードdraw4を持ってないならば
                     # 次のプレイヤーは手札が増える
                     self.draw_n(next_player, UNOConsumer.draw)
@@ -226,13 +226,18 @@ class UNOConsumer(WebsocketConsumer):
                 self.send(text_data=json.dumps(response))
             else:
                 card = data.get("card")
-                if (self.is_valid_play(card) and card in self.hands[player]):
-                    if ((card % 100) in self.COLOR_CHANGE):
-                        # もし色を変更できるカードならば色を除いてカードのみ残す
-                        card %= 100
-                    self.hands[player].remove(card)
-                    self.discard_pile.append(card)
-                    self.apply_card_play(card)
+                falg = False    # カードを出せるかどうかを判断するフラグ
+                if ((card % 100) in self.COLOR_CHANGE):
+                    card_to_remove = card % 100
+                else:
+                    card_to_remove = card
+                
+                print("self.is_valid_play(card) is", self.is_valid_play(card))
+                print("card_to_remove in self.hands[player]", card_to_remove in self.hands[player])
+                if (self.is_valid_play(card) and card_to_remove in self.hands[player]):
+                    self.hands[player].remove(card_to_remove)
+                    self.discard_pile.append(card_to_remove)
+                    self.apply_card_play(card_to_remove)
                     response = {
                         "type": "latest_hands",
                         "hands": self.hands[player],
@@ -259,11 +264,11 @@ class UNOConsumer(WebsocketConsumer):
         print("self.player:", self.players)             # プレイヤーの管理
         print("self.players_turn", self.players_turn)   # プレイヤーごとの手札管理
         print("self.hands:", self.hands)                # ターンを管理するためのリスト
-        #print("self.deck:", self.deck)                 # 山札
+        print("self.deck:", self.deck)                 # 山札
         print("self.discard_pile", self.discard_pile)   # 捨て札山
         print("self.current_turn:", self.current_turn)  # 現在のターン
         print("self.direction:", self.direction)        # 進行方向  時計回りだと１，反時計回りだと-1
-        #print("self.draw:", self.draw)                 # 引くカードの数の管理
+        print("self.draw:", self.draw)                 # 引くカードの数の管理
 
         self.send_game_update()
 
