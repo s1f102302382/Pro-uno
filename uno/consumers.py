@@ -103,6 +103,7 @@ class UNOConsumer(WebsocketConsumer):
                     self.draw_n(next_player, UNOConsumer.draw)
                     UNOConsumer.draw = 0    # 使い終わったら初期値に戻す
                     effect = "none"
+                    return self.next_turn(effect)
 
             elif effect == "draw4":
                 self.next_turn(effect)
@@ -117,11 +118,16 @@ class UNOConsumer(WebsocketConsumer):
                     self.draw_n(next_player, UNOConsumer.draw)
                     UNOConsumer.draw = 0    # 使い終わったら初期値に戻す
                     effect = "none"
+                    return self.next_turn(effect)
+            else:
+                # draw2やdraw4以外のカードは
+                return self.next_turn(effect)
         else:
             effect = "none"
             print("--------------------------------------------effect is", effect)
+            return self.next_turn(effect)
         
-        return self.next_turn(effect)
+        #return self.next_turn(effect)
  
     
     def next_turn(self, effect):
@@ -236,8 +242,8 @@ class UNOConsumer(WebsocketConsumer):
                 print("card_to_remove in self.hands[player]", card_to_remove in self.hands[player])
                 if (self.is_valid_play(card) and card_to_remove in self.hands[player]):
                     self.hands[player].remove(card_to_remove)
-                    self.discard_pile.append(card_to_remove)
-                    self.apply_card_play(card_to_remove)
+                    self.discard_pile.append(card)
+                    self.apply_card_play(card)
                     response = {
                         "type": "latest_hands",
                         "hands": self.hands[player],

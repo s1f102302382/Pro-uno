@@ -126,6 +126,7 @@ const show_top_card = (card) => {
     const topcardarea = document.querySelector('.top-card');
     topcardarea.innerHTML = '';
     const img = document.createElement('img');
+    if (card === 80 || card === 90) {card = '0' + String(card);}    // もし色が赤の色を変更できるカードならば、最初に0をつける
     img.src = staticUrl + `${card}.jpg`;
     img.alt = `${card}のカード`;
 
