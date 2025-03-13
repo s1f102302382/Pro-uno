@@ -38,7 +38,11 @@ class UNOConsumer(WebsocketConsumer):
         return random.sample(deck, k=number)
 
     def is_valid_play(self, card):
+        if card is None:
+            print("エラー：出されたカードはNoneです")
+            return False
         print("is_valid_play に飛びました")
+        print("card in is_valid_play is", card)
         top_card = self.discard_pile[-1]
         print("現在の捨札の一番上は", top_card)
         # 先に数字カードの判定をします
@@ -53,19 +57,19 @@ class UNOConsumer(WebsocketConsumer):
             # 前の方のカードが数字で自分のカードは数字じゃない場合
             # -> 同じ色かまたは色を変えれるカードか
             is_same_color = (card // 100 == top_card // 10)
-            is_card_change_color = (card in self.COLOR_CHANGE)
+            is_card_change_color = (card % 100 in self.COLOR_CHANGE)
             return (is_same_color or is_card_change_color) == True
         elif (card < 40 and top_card >= 40):
             # 前のカードは特別カードで自分のカードは数字カードの場合
             # -> 同じ色
             is_same_color = (card // 10 == top_card // 100)
             return (is_same_color) == True
-        #elif (card >= 40 and top_card >= 40):
+        # elif (card >= 40 and top_card >= 40):
         else:
             # 前のカードも今出したカードも特別カードである場合
             # -> 同じ特別カードかまたは色を変えれるカードか
             is_same_function_card = (card % 100 == top_card % 100)
-            is_card_change_color = (card in self.COLOR_CHANGE)
+            is_card_change_color = (card % 100 in self.COLOR_CHANGE)
             is_same_color = (card // 100 == top_card //100)
             return (is_same_function_card or is_card_change_color or is_same_color) == True
 
@@ -83,11 +87,16 @@ class UNOConsumer(WebsocketConsumer):
 
         if (tmpcard in special_card.keys()):
             effect = special_card[tmpcard]
+            
+            print("--------------------------------------------effect is", effect)
 
             if effect == "draw2":
                 self.next_turn(effect)
                 UNOConsumer.draw += 2
                 next_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
+                print("次のプレイヤーは", next_player)
+                print("次のプレイヤーが対抗できるdraw2またはdraw4を持っていますかの判別結果は", 
+                    self.check_next_player_have_draw2_or_draw4(next_player, 'two'))
                 if self.check_next_player_have_draw2_or_draw4(next_player, 'two') == False:
                     # もし次のプレイヤーが対抗できるカードdraw2またはdraw4を持ってないならば
                     # 次のプレイヤーは手札が増える
@@ -99,13 +108,15 @@ class UNOConsumer(WebsocketConsumer):
                 self.next_turn(effect)
                 UNOConsumer.draw += 4
                 next_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
+                print("次のプレイヤーは", next_player)
+                print("次のプレイヤーが対抗できるdraw2またはdraw4を持っていますかの判別結果は", 
+                    self.check_next_player_have_draw2_or_draw4(next_player, 'two'))
                 if self.check_next_player_have_draw2_or_draw4(next_player, 'two') == False:
-                    # もし次のプレイヤーが対抗できるカードdraw2またはdraw4を持ってないならば
+                    # もし次のプレイヤーが対抗できるカードdraw4を持ってないならば
                     # 次のプレイヤーは手札が増える
                     self.draw_n(next_player, UNOConsumer.draw)
                     UNOConsumer.draw = 0    # 使い終わったら初期値に戻す
                     effect = "none"
-            print("--------------------------------------------effect is", effect)
         else:
             effect = "none"
             print("--------------------------------------------effect is", effect)
@@ -190,90 +201,83 @@ class UNOConsumer(WebsocketConsumer):
         data = json.loads(text_data)
         action = data.get("action")
         player = data.get("player")
-        print("現在のカードを出したプレイヤーは", player)
         if action == "join":
             if player not in self.players:
-                print(player, "が接続しました")
                 self.hands[player] = self.create_initial_deck(self.number_of_initial_deck)
-                # self.hands -> {playername: [cardlist]}
-
                 self.players[player] = {"hand": self.hands[player]}
-                # self.players -> {playername: {"hand": [card]}}
+                self.players_turn.append(player)
 
-                # ここでプレイヤーの名前が players_turnに追加
-                if player not in self.players_turn:
-                    self.players_turn.append(player)
-            else:
-                print(player, "はすでに存在しています")
-
-            print("self.player:", self.players)             # プレイヤーの管理
-            print("self.players_turn", self.players_turn)   # プレイヤーごとの手札管理
-            print("self.hands:", self.hands)                # ターンを管理するためのリスト
-            #print("self.deck:", self.deck)                 # 山札
-            print("self.discard_pile", self.discard_pile)   # 捨て札山
-            print("self.current_turn:", self.current_turn)  # 現在のターン
-            print("self.direction:", self.direction)        # 進行方向  時計回りだと１，反時計回りだと-1
-            #print("self.draw:", self.draw)                 # 引くカードの数の管理
-
-            self.send_game_update(player)
+                response = {
+                    "type": "initial_hands",
+                    "hands": self.hands[player],
+                }
+                print("初期の手札は", response)
+                self.send(text_data=json.dumps(response))
         elif action == "play_card":
-            current_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
-            print("play_cardが実行されて\nカードを出せる人は", current_player)
-            print("player is", player)
-            if player != current_player:
+            aviable_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
+            print("aviable_player is", aviable_player)
+            print("the player who played card is", player)
+            if player != aviable_player:
                 response = {
                     "type": "error",
                     "message": "現在はあなたのターンではありません"
                 }
+                print(f"{player} が順番に出さなかった")
                 self.send(text_data=json.dumps(response))
-                print("response is:", response)
-                print("--------------------------")
-                print("self.player:", self.players)
-                print("self.players_turn", self.players_turn)
-                print("self.hands:", self.hands)
-                #print("self.deck:", self.deck)
-                print("self.discard_pile", self.discard_pile)
-                print("self.current_turn:", self.current_turn)
-                print("self.direction:", self.direction)
-                return
-            # print("カードを受け取りました！")
-            card = data.get("card")
-            print("このカードを受け取りました", card)
-            print("is_valid_playの真偽値は", self.is_valid_play(card))
-            if self.is_valid_play(card):
-                print("現在の手札は", self.hands[player])
-                self.hands[player].remove(card)
-                print("カードを出した現在の手札は", self.hands[player])
-                self.discard_pile.append(card)
-                #print("このプレイヤーの手札は", self.hands[player])
-                #print("現在の捨て札の一番上は", self.discard_pile[-1])
-                self.apply_card_play(card)      # カードを判定する関数
-                print("self.player:", self.players)
-                print("self.players_turn", self.players_turn)
-                print("self.hands:", self.hands)
-                #print("self.deck:", self.deck)
-                print("self.discard_pile", self.discard_pile)
-                print("self.current_turn:", self.current_turn)
-                print("self.direction:", self.direction)
-            self.send_game_update(player)
-        
-        elif action == "draw":   #出せるカードがなくて、山札から一枚引く
+            else:
+                card = data.get("card")
+                if (self.is_valid_play(card) and card in self.hands[player]):
+                    if ((card % 100) in self.COLOR_CHANGE):
+                        # もし色を変更できるカードならば色を除いてカードのみ残す
+                        card %= 100
+                    self.hands[player].remove(card)
+                    self.discard_pile.append(card)
+                    self.apply_card_play(card)
+                    response = {
+                        "type": "latest_hands",
+                        "hands": self.hands[player],
+                    }
+                    print("カードを出して、最新の手札を送信", response)
+                    self.send(text_data=json.dumps(response))
+
+        elif action == "draw":
             UNOConsumer.draw = 1
             self.draw_n(player, UNOConsumer.draw)
-            UNOConsumer.draw = 0                    # カードを引いた後はデフォルト値0に戻す
-            self.next_turn("none")
-            self.send_game_update(player)
+            UNOConsumer.draw = 0
 
+            the_card_you_get = self.hands[player][-1]
+            if not self.is_valid_play(the_card_you_get):
+                print(f"{player} がカードを引いたが、出せるカードがなかったのでターンを終了")
+                self.next_turn("none")
+        elif action == "get_latest_hands":
+            response = {
+                "type": "latest_hands",
+                "hands": self.hands[player],
+            }
+            self.send(text_data=json.dumps(response))
+        
+        print("self.player:", self.players)             # プレイヤーの管理
+        print("self.players_turn", self.players_turn)   # プレイヤーごとの手札管理
+        print("self.hands:", self.hands)                # ターンを管理するためのリスト
+        #print("self.deck:", self.deck)                 # 山札
+        print("self.discard_pile", self.discard_pile)   # 捨て札山
+        print("self.current_turn:", self.current_turn)  # 現在のターン
+        print("self.direction:", self.direction)        # 進行方向  時計回りだと１，反時計回りだと-1
+        #print("self.draw:", self.draw)                 # 引くカードの数の管理
 
+        self.send_game_update()
 
-    def send_game_update(self, cuurent_player=None):
+    def send_game_update(self):
+    #def send_game_update(self, cuurent_player=None):
         masked_player = {}
         for player_name in self.players:
+            masked_player[player_name] = len(self.hands[player_name])
+            """
             if player_name == cuurent_player:
                 masked_player[player_name] = self.players[player_name]
             else:
                 masked_player[player_name] = len(self.players[player_name])
-        
+            """
         update = {
             "type": "game-update",
             "turn": self.current_turn,

@@ -36,7 +36,10 @@
     {{ player_name|json_script:"player-name" }}
     <!--静的ファイルのパスを JavaScript に渡す-->
     <script>const staticUrl = "{% static 'uno/img/' %}";</script>
-
+    <!--
     <script type="text/javascript" src="{% static 'uno/js/game.js' %}"></script>
+    <script type="text/javascript" src="{% static 'uno/js/game_for_test.js' %}"></script>
+    -->
+    <script type="text/javascript" src="{% static 'uno/js/game_for_test.js' %}"></script>
 </body>
 </html>

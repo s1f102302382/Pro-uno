@@ -37,43 +37,63 @@ const Listener = (Websocket) => {
     Websocket.onmessage = (event) => {
         const data = JSON.parse(event.data);
         console.log("get data form server is\n", data);
-        switch(data.type) {
-            case 'game-update':
 
-                if (tmphand && (tmphand.length !== data.player[playerName])){
+        switch(data.type) {
+            case 'initial_hands':
+                console.log("hands is", data.hands);
+                tmphand = [...data.hands];
+                show_your_hand(tmphand);
+                break;
+            case 'game-update':
+                console.log("現在はgame-updateが呼び起こされた")
+                console.log("playerName", playerName);
+                let Your_number_of_cards = data.player[playerName];
+                console.log("Your_number_of_cards is", Your_number_of_cards);
+                if (tmphand.length !== Your_number_of_cards){
+                    console.log("ローカルでのカードの枚数は", tmphand.length);
+                    console.log("あなたのカードの枚数は", Your_number_of_cards);
+                    console.log("最新のカードの枚数と一致しないため最新のカードを取得します...");
                     get_latest_card();
+                    return;
                 }
-                const isMyTurn = (data.next_player === playerName);
+                /*
+                //自分のターンでなければ若干色が薄くなる
+                const isMyTurn = (data.next_player === player);
                 document.querySelectorAll('.card').forEach(card => {
                     card.style.opacity = isMyTurn ? 1 : 0.5;
                     card.style.pointerEvents = isMyTurn ? 'all' : 'none';
                 });
-                
-                const yourhand = data.player[playerName]?.hand;
-
-                if (!yourhand) {    // もし自分宛じゃなければ、保存した手札を使う;
-                    //console.log("if yourhand === nullを実行中 --------------------ifを実行");
-                    //console.log("tmphand is", tmphand);
-                    show_your_hand(tmphand);
-                } else {                    // 
-                    //console.log("---------------------elseを実行");
-                    show_your_hand(yourhand);
-                    //console.log("before change tmphand is", tmphand);
-                    tmphand = [...yourhand];
-                    //console.log("after change tmpcard is ", tmphand);
-                }
+                */
                 const top_card = data.top_card;
                 show_top_card(top_card);
-
+                console.log("next player is", data.next_player);
                 break;
             case 'latest_hands':
+                console.log("現在はlateset_hands")
                 tmphand = data.hands;
-                show_top_card(tmphand);
+                console.log("lateset_handsを呼び起こして、現在の手札は", tmphand);
+                show_your_hand(tmphand);
                 break;
             case 'error':
                 alert("あなたのターンではありません");
                 break;
         }
+        /*
+        if (data.type === 'game-update'){
+
+            console.log("playerName", playerName);
+            let Your_number_of_cards = data.player[playerName];
+            console.log("Your_number_of_cards is", Your_number_of_cards);
+            if (tmphand.length !== Your_number_of_cards){
+                console.log("ローカルでのカードの枚数は", tmphand.length);
+                console.log("あなたのカードの枚数は", Your_number_of_cards);
+                console.log("最新のカードの枚数と一致しないため最新のカードを取得します...");
+                get_latest_card();
+                return;
+            }
+        }
+        */
+
     }
 };
 
@@ -86,15 +106,6 @@ const sent_join = (PLAYERNAME) => {
 
 const show_your_hand = (cards) => {
     const yourdeckarea = document.querySelector('.your');
-    /*
-    const existingCards = yourdeckarea.querySelectorAll('.card img');
-
-    if (existingCards.length === cards.length 
-        &&
-        [...existingCards].every((img.alt) === `${cards[i]}のカード`)) {
-            return;// 変更がなければ更新しない
-        }
-    */
     yourdeckarea.innerHTML = '';
 
     cards.forEach(card => {
@@ -102,7 +113,6 @@ const show_your_hand = (cards) => {
         div.className = 'card';
         const img = document.createElement('img');
 
-        //img.src = `{% static 'uno/img/${card}.jpg' %}`;
         img.src = staticUrl + `${card}.jpg`;      // Django の static URL を使って画像のパスを生成
         img.alt = `${card}のカード`;
 
@@ -125,22 +135,11 @@ const show_top_card = (card) => {
 const play_card = (card) => {
     console.log("playe_card function is work!");
     if (card === 80 || card === 90) {    // 80, 90 はワイルドカード
-        // ここで画面に色を選択するようにな感じのものが出てくる
-        // red = 0, bule = 1, yellow = 2, green = 3
-        // color = 選択した色 * 100;
-        // card += color:
         selectedCard = card;    // 選択待ちカードを保存
         document.getElementById("color-picker").style.display = "block";  // 色選択UIを表示
         return;     // すぐには送信せずに待機
     }
     console.log("you played card is", card);
-    /*
-    UNOSocket.send(JSON.stringify({
-        action: 'play_card',
-        card: card,
-        player: playerName,
-    }));
-    */
    sendCardToServer(card);
 };
 
@@ -169,15 +168,8 @@ const sendCardToServer = (card) => {
         card: card,
         player: playerName,
     });
-    /*
-        UNOSocket.send(JSON.stringify({
-        action: 'play_card',
-        card: card,
-        player: playerName,
-    }));
-    */
 
-    console.log("Sending message", message);
+    console.log("Sending message in sendCardToserver is", message);
     UNOSocket.send(message);
 };
 
@@ -191,7 +183,7 @@ const draw_card = () => {
 
 const get_latest_card = () => {
     const message = JSON.stringify({
-        action: 'play_card',
+        action: 'get_latest_hands',
         player: playerName,
     })
 
