@@ -42,6 +42,8 @@ const Listener = (Websocket) => {
             case 'initial_hands':
                 console.log("hands is", data.hands);
                 tmphand = [...data.hands];
+                tmphand = sort_hands(tmphand);
+                console.log("after sort hand is", tmphand);
                 show_your_hand(tmphand);
                 break;
             case 'game-update':
@@ -71,6 +73,8 @@ const Listener = (Websocket) => {
             case 'latest_hands':
                 console.log("現在はlateset_hands")
                 tmphand = data.hands;
+                tmphand = sort_hands(tmphand);
+                console.log("after sort hand is", tmphand);
                 console.log("lateset_handsを呼び起こして、現在の手札は", tmphand);
                 show_your_hand(tmphand);
                 break;
@@ -108,6 +112,7 @@ const show_your_hand = (cards) => {
     const yourdeckarea = document.querySelector('.your');
     yourdeckarea.innerHTML = '';
 
+    console.log("show_your_hands の hands", cards);
     cards.forEach(card => {
         const div = document.createElement('div');
         div.className = 'card';
@@ -190,6 +195,65 @@ const get_latest_card = () => {
 
     console.log("Sending message", message);
     UNOSocket.send(message);
+}
+
+const sort_hands = (hands) => {
+    // red = 0, bule = 1, yellow = 2, green = 3
+    const red = 0; const blue = 1; const yellow = 2; const green = 3; const change_color = 80; const draw4 = 90;
+    let result = [];        let red_array = [];     let blue_array = [];
+    let yellow_array = [];  let green_array = [];   let other = [];
+
+    for (let i = 0; i < hands.length; i++) {
+        if (hands[i] < 40) {
+            let color = Math.floor(hands[i] / 10);  // 商を整数にする
+            switch (color) {
+                case red:
+                    red_array.push(hands[i]);
+                    break;
+                case blue:
+                    blue_array.push(hands[i]);
+                    break;
+                case yellow:
+                    yellow_array.push(hands[i]);
+                    break;
+                case green:
+                    green_array.push(hands[i]);
+                    break;
+            }
+        } else if (hands[i] % 100>= 40 && hands[i] % 100 < 80) {
+            let color = Math.floor(hands[i] / 100);     // 商を整数にする
+            switch (color) {
+                case red:
+                    red_array.push(hands[i]);
+                    break;
+                case blue:
+                    blue_array.push(hands[i]);
+                    break;
+                case yellow:
+                    yellow_array.push(hands[i]);
+                    break;
+                case green:
+                    green_array.push(hands[i]);
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            // 80か90がの残る
+            other.push(hands[i]);
+        }
+    }
+    // 下で全部降順でソート
+    red_array.sort((a, b) => b - a);
+    blue_array.sort((a, b) => b - a);
+    yellow_array.sort((a, b) => b - a);
+    green_array.sort((a, b) => b - a);
+
+    // resultに結合する
+    result = [...red_array, ...blue_array, ...yellow_array, ...green_array, ...other];
+    hands = [];
+    hands = [...result];
+    return hands;
 }
 
 const main = () => {

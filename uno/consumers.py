@@ -77,6 +77,7 @@ class UNOConsumer(WebsocketConsumer):
         UNOConsumer.hands[player] += (UNOConsumer.deck[:n])
         del UNOConsumer.deck[:n]                          # 引いたカードを山札から削除する
 
+    '''
     def apply_card_play(self, card):
         print("apply_card_playに入りました")
         print("このカードを受け取りました", card)
@@ -127,7 +128,45 @@ class UNOConsumer(WebsocketConsumer):
             print("--------------------------------------------effect is", effect)
             return self.next_turn(effect)
         
-        #return self.next_turn(effect)
+        #return self.next_turn(effect)@
+    '''
+    def apply_card_play(self, card):
+        print("apply_card_playに入りました")
+        print("このカードを受け取りました", card)
+        tmpcard = card % 100
+
+        # 特殊カードのマッピングを統合
+        special_card = {**UNOConsumer.FUNCTION_CARD, **UNOConsumer.COLOR_CHANGE}
+
+        # 特殊カードでない場合は早期リターン
+        if tmpcard not in special_card:
+            print("--------------------------------------------effect is none")
+            return self.next_turn("none")
+
+        effect = special_card[tmpcard]
+        print("--------------------------------------------effect is", effect)
+
+        if effect == "draw2":
+            self.next_turn(effect)
+            UNOConsumer.draw += 2
+            next_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
+            can_counter = self.check_next_player_have_draw2_or_draw4(next_player, 'two' if effect == "draw2" else 'four')
+            if not can_counter:
+                self.draw_n(next_player, UNOConsumer.draw)
+                UNOConsumer.draw = 0  # 初期化
+                return self.next_turn("none")   # カードを引かせて次のターンいく
+        elif effect == "draw4":
+            self.next_turn(effect)
+            UNOConsumer.draw += 4
+            next_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
+            can_counter = self.check_next_player_have_draw2_or_draw4(next_player, 'two' if effect == "draw2" else 'four')
+            if not can_counter:
+                self.draw_n(next_player, UNOConsumer.draw)
+                UNOConsumer.draw = 0  # 初期化
+                return self.next_turn("none")   # カードを引かせて次のターンいく
+        else:
+            return self.next_turn(effect)
+        return
  
     
     def next_turn(self, effect):
@@ -176,7 +215,24 @@ class UNOConsumer(WebsocketConsumer):
             if (90) in tmp:
                 return True
             return False
-    
+
+    def remove_card(self, player, card):
+        play_all_same_color = 70
+        if card < 40:
+            color = card // 10
+        elif (40 <= card % 100) and (card % 100 < 80):
+            color = card // 100
+
+        if (card % 100) == play_all_same_color:
+            # 同じ色のカードだけを残す新しいリストを作成
+            self.hands[player] = [i for i in self.hands[player] if not (
+                (i < 40 and i // 10 == color) or
+                (40 <= (i % 100) <= 70 and i // 100 == color)
+            )]
+        else:
+            if card in self.hands[player]:
+                self.hands[player].remove(card)
+
     def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = "uno_%s" % self.room_name
@@ -241,7 +297,8 @@ class UNOConsumer(WebsocketConsumer):
                 print("self.is_valid_play(card) is", self.is_valid_play(card))
                 print("card_to_remove in self.hands[player]", card_to_remove in self.hands[player])
                 if (self.is_valid_play(card) and card_to_remove in self.hands[player]):
-                    self.hands[player].remove(card_to_remove)
+                    #self.hands[player].remove(card_to_remove)
+                    self.remove_card(player, card_to_remove)
                     self.discard_pile.append(card)
                     self.apply_card_play(card)
                     response = {
@@ -252,14 +309,23 @@ class UNOConsumer(WebsocketConsumer):
                     self.send(text_data=json.dumps(response))
 
         elif action == "draw":
-            UNOConsumer.draw = 1
-            self.draw_n(player, UNOConsumer.draw)
-            UNOConsumer.draw = 0
+            aviable_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
+            if (player != aviable_player):
+                response = {
+                    "type": "error",
+                    "message": "現在はあなたのターンではありません"
+                }
+                print(f"{player} が順番に出さなかった")
+                self.send(text_data=json.dumps(response))
+            else:
+                UNOConsumer.draw = 1
+                self.draw_n(player, UNOConsumer.draw)
+                UNOConsumer.draw = 0
 
-            the_card_you_get = self.hands[player][-1]
-            if not self.is_valid_play(the_card_you_get):
-                print(f"{player} がカードを引いたが、出せるカードがなかったのでターンを終了")
-                self.next_turn("none")
+                the_card_you_get = self.hands[player][-1]
+                if not self.is_valid_play(the_card_you_get):
+                    print(f"{player} がカードを引いたが、出せるカードがなかったのでターンを終了")
+                    self.next_turn("none")
         elif action == "get_latest_hands":
             response = {
                 "type": "latest_hands",
