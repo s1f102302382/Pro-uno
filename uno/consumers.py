@@ -77,59 +77,6 @@ class UNOConsumer(WebsocketConsumer):
         UNOConsumer.hands[player] += (UNOConsumer.deck[:n])
         del UNOConsumer.deck[:n]                          # 引いたカードを山札から削除する
 
-    '''
-    def apply_card_play(self, card):
-        print("apply_card_playに入りました")
-        print("このカードを受け取りました", card)
-        tmpcard = card % 100
-        special_card = {}
-        special_card.update(UNOConsumer.FUNCTION_CARD)
-        special_card.update(UNOConsumer.COLOR_CHANGE)
-
-        if (tmpcard in special_card.keys()):
-            effect = special_card[tmpcard]
-            
-            print("--------------------------------------------effect is", effect)
-
-            if effect == "draw2":
-                self.next_turn(effect)
-                UNOConsumer.draw += 2
-                next_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
-                print("次のプレイヤーは", next_player)
-                print("次のプレイヤーが対抗できるdraw2またはdraw4を持っていますかの判別結果は", 
-                    self.check_next_player_have_draw2_or_draw4(next_player, 'two'))
-                if self.check_next_player_have_draw2_or_draw4(next_player, 'two') == False:
-                    # もし次のプレイヤーが対抗できるカードdraw2またはdraw4を持ってないならば
-                    # 次のプレイヤーは手札が増える
-                    self.draw_n(next_player, UNOConsumer.draw)
-                    UNOConsumer.draw = 0    # 使い終わったら初期値に戻す
-                    effect = "none"
-                    return self.next_turn(effect)
-
-            elif effect == "draw4":
-                self.next_turn(effect)
-                UNOConsumer.draw += 4
-                next_player = UNOConsumer.players_turn[UNOConsumer.current_turn]
-                print("次のプレイヤーは", next_player)
-                print("次のプレイヤーが対抗できるdraw4を持っていますかの判別結果は", 
-                    self.check_next_player_have_draw2_or_draw4(next_player, 'four'))
-                if self.check_next_player_have_draw2_or_draw4(next_player, 'four') == False:
-                    # もし次のプレイヤーが対抗できるカードdraw4を持ってないならば
-                    # 次のプレイヤーは手札が増える
-                    self.draw_n(next_player, UNOConsumer.draw)
-                    UNOConsumer.draw = 0    # 使い終わったら初期値に戻す
-                    effect = "none"
-                    return self.next_turn(effect)
-            else:
-                # draw2やdraw4以外のカードは
-                return self.next_turn(effect)
-        else:
-            effect = "none"
-            print("--------------------------------------------effect is", effect)
-            return self.next_turn(effect)
-        
-        #return self.next_turn(effect)@
-    '''
     def apply_card_play(self, card):
         print("apply_card_playに入りました")
         print("このカードを受け取りました", card)
@@ -349,12 +296,7 @@ class UNOConsumer(WebsocketConsumer):
         masked_player = {}
         for player_name in self.players:
             masked_player[player_name] = len(self.hands[player_name])
-            """
-            if player_name == cuurent_player:
-                masked_player[player_name] = self.players[player_name]
-            else:
-                masked_player[player_name] = len(self.players[player_name])
-            """
+
         update = {
             "type": "game-update",
             "turn": self.current_turn,

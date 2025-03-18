@@ -69,7 +69,34 @@
     transform: translateX(-50%);
 }
 
-.card {
+ul {
+    display: flex;
+    justify-content: center;
+    max-width: 24rem;
+}
+
+li:not(:last-child) {
+    /* :not(:last-child) に適用することで、基本的にすべて縮めて、最後の1枚だけ幅を保持する */
+    min-width: 0;
+    /* 最小の重なり幅。枚数が少ないときでもこの幅は重ねる */
+    margin-right: -2rem;
+}
+
+li {
+    /* ホバー時アニメーション */
+    transition-property: flex-shrink, translate;
+    transition-duration: 0.2s;
+    /* ホバーしたカードが前面に出ないようにする */
+    isolation: isolate;
+}
+
+li:hover {
+    flex-shrink: 0;
+    translate: 0 -5rem;
+}
+
+.card{
+    /*
     position: absolute;
     width: 80px;
     height: 120px;
@@ -81,6 +108,39 @@
     font-size: 24px;
     font-weight: bold;
     line-height: 120px;
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform-origin: bottom center;
+    */
+    /*
+    width: 6rem;
+    aspect-ratio: 58 / 89;
+    background-color: #c00606;
+    box-shadow: 0 0 6px black;
+    border: 0.5rem white solid;
+    border-radius: 0.5rem;
+    */
+    width: 6rem;
+    aspect-ratio: 58 / 89;
+    background-color: #c00606;
+    box-shadow: 0 0 6px black;
+    border: 0.5rem white solid;
+    border-radius: 0.5rem;
+
+    /* アーチ状に並べる */
+    --degree: calc((var(--index) - ((var(--length) - 1) / 2)) * 6deg);
+    rotate: var(--degree);
+    /*translate: 0 calc((1 - cos(var(--degree))) * 300%);*/
+
+    /* X軸とY軸の移動 */
+    translate: 
+        /*
+        calc(sin(var(--degree)) * 150%) 
+        calc((1 - cos(var(--degree))) * 300%);
+        */
+        calc(sin(var(--degree)) * 100%) 
+        calc((1 - cos(var(--degree))) * 200%);
 }
 
 /* カードを扇状に配置 */
@@ -91,6 +151,7 @@ translate(x, y) ->
 上 < y < 下     # 0を境目
 
 */
+/*
 .card:nth-child(1) { transform: rotate(-30deg) translate(-300px, 3px); z-index: 1; }
 .card:nth-child(2) { transform: rotate(-20deg) translate(-200px, 2px); z-index: 2; }
 .card:nth-child(3) { transform: rotate(-10deg) translate(-100px, 1px); z-index: 3; }
@@ -98,6 +159,7 @@ translate(x, y) ->
 .card:nth-child(5) { transform: rotate(10deg) translate(100px, -1px); z-index: 5; }
 .card:nth-child(6) { transform: rotate(20deg) translate(200px, -2px); z-index: 6; }
 .card:nth-child(7) { transform: rotate(30deg) translate(300px, -3px); z-index: 7; }
+*/
 /*
 .card:nth-child(1) { transform: rotate(-30deg) translate(-300px, 10px); z-index: 1; }
 .card:nth-child(2) { transform: rotate(-20deg) translate(-200px, 3px); z-index: 2; }
@@ -107,3 +169,4 @@ translate(x, y) ->
 .card:nth-child(6) { transform: rotate(20deg) translate(200px, -5px); z-index: 6; }
 .card:nth-child(7) { transform: rotate(30deg) translate(300px, -5px); z-index: 7; }
 */
+

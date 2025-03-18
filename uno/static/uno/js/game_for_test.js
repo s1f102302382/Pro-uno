@@ -112,8 +112,36 @@ const show_your_hand = (cards) => {
     const yourdeckarea = document.querySelector('.your');
     yourdeckarea.innerHTML = '';
 
+    const numberOfcards = cards.length;
+    console.log("並べるカードの数は", numberOfcards);
+    let ulElement = document.createElement("ul");
+    if (ulElement) {
+        ulElement.style.setProperty("--length", numberOfcards); // --length を設定
+    }
+    yourdeckarea.appendChild(ulElement);
     console.log("show_your_hands の hands", cards);
+
+    for (let i = 0; i < numberOfcards; i++) {
+        const card = cards[i];
+        const li = document.createElement('li');
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.style.setProperty("--index", i);
+        const img = document.createElement('img');
+
+        img.src = staticUrl + `${card}.jpg`;      // Django の static URL を使って画像のパスを生成
+        img.alt = `${card}のカード`;
+
+        div.appendChild(img);
+        div.addEventListener('click', () => play_card(card));
+        li.appendChild(div);
+        ulElement.appendChild(li);
+        //yourdeckarea.appendChild(div);
+        //yourdeckarea.appendChild(li);
+    }
+    /*
     cards.forEach(card => {
+        const li = document.createElement('li');
         const div = document.createElement('div');
         div.className = 'card';
         const img = document.createElement('img');
@@ -123,8 +151,11 @@ const show_your_hand = (cards) => {
 
         div.appendChild(img);
         div.addEventListener('click', () => play_card(card));
-        yourdeckarea.appendChild(div);
+        li.appendChild(div);
+        //yourdeckarea.appendChild(div);
+        yourdeckarea.appendChild(li);
     });
+    */
 };
 
 const show_top_card = (card) => {
