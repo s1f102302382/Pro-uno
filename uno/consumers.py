@@ -180,6 +180,10 @@ class UNOConsumer(WebsocketConsumer):
             if card in self.hands[player]:
                 self.hands[player].remove(card)
 
+        # 手札がなくなったか確認
+        if len(self.hands[player]) == 0:
+            self.send_game_end_message(player)
+
     def connect(self):
         self.room_name = self.scope["url_route"]["kwargs"]["room_name"]
         self.room_group_name = "uno_%s" % self.room_name
@@ -235,7 +239,6 @@ class UNOConsumer(WebsocketConsumer):
                 self.send(text_data=json.dumps(response))
             else:
                 card = data.get("card")
-                falg = False    # カードを出せるかどうかを判断するフラグ
                 if ((card % 100) in self.COLOR_CHANGE):
                     card_to_remove = card % 100
                 else:
@@ -289,7 +292,8 @@ class UNOConsumer(WebsocketConsumer):
         print("self.direction:", self.direction)        # 進行方向  時計回りだと１，反時計回りだと-1
         print("self.draw:", self.draw)                 # 引くカードの数の管理
 
-        self.send_game_update()
+        if len(self.hands[player]) != 0:
+            self.send_game_update()
 
     def send_game_update(self):
     #def send_game_update(self, cuurent_player=None):
@@ -312,5 +316,21 @@ class UNOConsumer(WebsocketConsumer):
     def game_update(self, event):
         message = event['message']
         print('game_update-message', message)
+        self.send(text_data=message)
+
+    def send_game_end_message(self, winner):
+        message = {
+        "type": "game-end",
+        "winner": winner,
+        "message": f"{winner} has won the game!"
+        }
+        async_to_sync(self.channel_layer.group_send)(
+            self.room_group_name,
+            {"type": "game_end", "message": json.dumps(message)}
+        )
+
+    def game_end(self, event):
+        message = event['message']
+        print('game_end-message', message)
         self.send(text_data=message)
  

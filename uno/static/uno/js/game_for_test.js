@@ -49,6 +49,12 @@ const Listener = (Websocket) => {
             case 'game-update':
                 console.log("現在はgame-updateが呼び起こされた")
                 console.log("playerName", playerName);
+                const NEXT = data.next_player;
+                if (NEXT !== playerName) {
+                    let NEXT_PLAYER = document.querySelector('.message').textContent = NEXT + " is the next";
+                } else {
+                    let NEXT_PLAYER = document.querySelector('.message').textContent = "Is your turn";
+                }
                 let Your_number_of_cards = data.player[playerName];
                 console.log("Your_number_of_cards is", Your_number_of_cards);
                 if (tmphand.length !== Your_number_of_cards){
@@ -77,6 +83,15 @@ const Listener = (Websocket) => {
                 console.log("after sort hand is", tmphand);
                 console.log("lateset_handsを呼び起こして、現在の手札は", tmphand);
                 show_your_hand(tmphand);
+                break;
+            case 'game-end':
+                const message = data.message
+                const winner = data.winner;
+                if (winner !== playerName){
+                    let messageshow = document.querySelector('.message').textContent = message;
+                } else {
+                    let messageshow = document.querySelector('.message').textContent = "You are winner !";
+                }
                 break;
             case 'error':
                 alert("あなたのターンではありません");
