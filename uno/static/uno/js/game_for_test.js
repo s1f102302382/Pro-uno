@@ -49,6 +49,7 @@ const Listener = (Websocket) => {
             case 'game-update':
                 console.log("現在はgame-updateが呼び起こされた")
                 console.log("playerName", playerName);
+                show_other_player_hands_number(data.player);
                 const NEXT = data.next_player;
                 if (NEXT !== playerName) {
                     let NEXT_PLAYER = document.querySelector('.message').textContent = NEXT + " is the next";
@@ -250,7 +251,7 @@ const sort_hands = (hands) => {
     let yellow_array = [];  let green_array = [];   let other = [];
 
     for (let i = 0; i < hands.length; i++) {
-        if (hands[i] < 40) {
+        if (hands[i] < 40) {// 数字カードの場合
             let color = Math.floor(hands[i] / 10);  // 商を整数にする
             switch (color) {
                 case red:
@@ -266,7 +267,7 @@ const sort_hands = (hands) => {
                     green_array.push(hands[i]);
                     break;
             }
-        } else if (hands[i] % 100>= 40 && hands[i] % 100 < 80) {
+        } else if (hands[i] % 100>= 40 && hands[i] % 100 < 80) {// 機能カードの場合は百の桁が色
             let color = Math.floor(hands[i] / 100);     // 商を整数にする
             switch (color) {
                 case red:
@@ -300,6 +301,30 @@ const sort_hands = (hands) => {
     hands = [];
     hands = [...result];
     return hands;
+}
+
+const show_other_player_hands_number = (player) => {
+    // data.playerで引数を受け取る
+    let i = 0;
+    //const area = ["upper", "right", "left"];
+    const area = [".handcontainer.upper", ".handcontainer.right", ".handcontainer.left"];
+
+    // 自分の名前のキーを除外する
+    const keys = Object.keys(player).filter(key => key !== playerName);
+    console.log(keys);
+    for (const key of keys) {
+        const otherPlayer = document.querySelector(area[i]);
+        if (!otherPlayer) {
+            console.error(`Error: ${area[i]} が見つかりません`);
+            continue;
+        }
+        otherPlayer.innerHTML = '';
+        let h2Element = document.createElement("h2");
+        h2Element.textContent = `${key}: ${player[key]}`;
+        otherPlayer.appendChild(h2Element);
+        i++;
+    }
+    return;
 }
 
 const main = () => {
