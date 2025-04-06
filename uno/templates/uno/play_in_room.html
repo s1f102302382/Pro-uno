@@ -4,26 +4,43 @@
 <head>
     <meta charset="UTF-8">
     <title>Room macth</title>
-    <link rel="icon" href="{% static 'uno/img' %}">
+    <link rel="stylesheet" href="{% static 'uno/css/game.css' %}">
 </head>
 <body>
     <h1>This is room macth</h1>
-    <div>
-        <div class="deck">
+    <h2 class="message"></h2>
+    <div class="continer">
+        <div class="handcontainer upper">
             <h>上のプレイヤーのデッキ</h>
-            <p><img src="{% static 'uno/img/355.jpg' %}" alt="緑のリバースカード"></p>
         </div>
-        <div class="deck">
+        <div class="handcontainer right">
             <h>右のプレイヤーのデッキ</h>
         </div>
-        <div class="deck">
-            <h>下のプレイヤーのデッキ</h>
+        <div class="centercontainer">
+            <div class="top-card"></div>
+            <div class="drawcard" onclick="draw_card()">draw card</div>
+            <div id="color-picker" class="color-picker" style="display: none;">
+                <button onclick="selectColor(0)">Red</button>
+                <button onclick="selectColor(1)">Blue</button>
+                <button onclick="selectColor(2)">Yellow</button>
+                <button onclick="selectColor(3)">Green</button>
+            </div>            
         </div>
-        <div class="deck">
+        <div class="handcontainer left">
             <h>左のプレイヤーのデッキ</h>
+        </div>
+        <div class="handcontainer your">
+            <h>下のプレイヤーのデッキ</h>
         </div>
     </div>
     {{ room_name|json_script:"room-name" }}
+    {{ player_name|json_script:"player-name" }}
+    <!--静的ファイルのパスを JavaScript に渡す-->
+    <script>const staticUrl = "{% static 'uno/img/' %}";</script>
+    <!--
     <script type="text/javascript" src="{% static 'uno/js/game.js' %}"></script>
+    <script type="text/javascript" src="{% static 'uno/js/game_for_test.js' %}"></script>
+    -->
+    <script type="text/javascript" src="{% static 'uno/js/game_for_test.js' %}"></script>
 </body>
 </html>

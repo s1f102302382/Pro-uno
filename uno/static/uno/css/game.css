@@ -1,0 +1,157 @@
+/* 親要素に相対位置を設定 */
+
+.continer {
+    position: relative;
+    margin: 0;
+    padding: 0;
+    height: 100vh; /* ビューポートの高さ */
+    width: 100vw;  /* ビューポートの幅 */
+}
+
+/* 共通のスタイル */
+.handcontainer {
+    position: absolute;
+    min-width: 150px; /* 幅を広めに確保 */
+    height: 100px; /* 高さ */
+    background-color: #f0f0f0; /* 背景色 */
+    border: 1px solid #ccc; /* 枠線 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    white-space: nowrap; /* 文字が改行されないようにする */
+    padding: 10px; /* 内側の余白 */
+}
+
+/* 上部に配置 */
+.upper {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto; /* 必要に応じて幅を自動調整 */
+    max-width: 90%; /* 画面の幅に収まりきらない場合は制限 */
+}
+
+/* 右側に配置 */
+.right {
+    top: 50%;
+    right: 0;
+    transform: translateY(-50%);
+}
+
+/* 真ん中に配置 */
+.centercontainer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 150px; /* 必要に応じてサイズ調整 */
+    height: 150px;
+    background-color: #fff; /* 背景色 */
+    border: 2px solid #000; /* 枠線 */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+/* 左側に配置 */
+.left {
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+}
+
+/* 下部に配置 */
+.your {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+ul {
+    display: flex;
+    justify-content: center;
+    max-width: 24rem;
+}
+
+li:not(:last-child) {
+    /* :not(:last-child) に適用することで、基本的にすべて縮めて、最後の1枚だけ幅を保持する */
+    min-width: 0;
+    /* 最小の重なり幅。枚数が少ないときでもこの幅は重ねる */
+    margin-right: -2rem;
+}
+
+li {
+    /* ホバー時アニメーション */
+    transition-property: flex-shrink, translate;
+    transition-duration: 0.2s;
+    /* ホバーしたカードが前面に出ないようにする */
+    isolation: isolate;
+}
+
+li:hover {
+    flex-shrink: 0;
+    translate: 0 -5rem;
+}
+
+.card{
+    transform: scale(0.7);  /* 80% に縮小 */
+    width: 6rem;
+    aspect-ratio: 58 / 89;
+    background-color: #c00606;
+    box-shadow: 0 0 6px black;
+    border: 0.5rem white solid;
+    border-radius: 0.5rem;
+
+    /* アーチ状に並べる */
+    /*--degree: calc((var(--index) - ((var(--length) - 1) / 2)) * 6deg);*/
+    --degree: calc((var(--index) - ((var(--length) - 1) / 2)) * 5deg);
+    rotate: var(--degree);
+    /*translate: 0 calc((1 - cos(var(--degree))) * 300%);*/
+
+    /* X軸とY軸の移動 */
+    translate: 
+        /*
+        calc(sin(var(--degree)) * 150%) 
+        calc((1 - cos(var(--degree))) * 300%);
+        */
+        /*
+        calc(sin(var(--degree)) * 100%) 
+        calc((1 - cos(var(--degree))) * 200%);
+        */
+        calc(sin(var(--degree)) * 150%) 
+        calc((1 - cos(var(--degree))) * 250%);
+}
+
+/* カードを扇状に配置 */
+/*
+rotate: x<0 左に傾く, x>0右に傾く
+translate(x, y) -> 
+左 < x < 右     # 0を境目
+上 < y < 下     # 0を境目
+
+*/
+/*
+.card:nth-child(1) { transform: rotate(-30deg) translate(-300px, 3px); z-index: 1; }
+.card:nth-child(2) { transform: rotate(-20deg) translate(-200px, 2px); z-index: 2; }
+.card:nth-child(3) { transform: rotate(-10deg) translate(-100px, 1px); z-index: 3; }
+.card:nth-child(4) { transform: rotate(0deg) translate(0px, 0px); z-index: 4; }
+.card:nth-child(5) { transform: rotate(10deg) translate(100px, -1px); z-index: 5; }
+.card:nth-child(6) { transform: rotate(20deg) translate(200px, -2px); z-index: 6; }
+.card:nth-child(7) { transform: rotate(30deg) translate(300px, -3px); z-index: 7; }
+*/
+/*
+.card:nth-child(1) { transform: rotate(-30deg) translate(-300px, 10px); z-index: 1; }
+.card:nth-child(2) { transform: rotate(-20deg) translate(-200px, 3px); z-index: 2; }
+.card:nth-child(3) { transform: rotate(-10deg) translate(-100px, 10px); z-index: 3; }
+.card:nth-child(4) { transform: rotate(0deg) translate(0px, 5px); z-index: 4; }
+.card:nth-child(5) { transform: rotate(10deg) translate(100px, 0px); z-index: 5; }
+.card:nth-child(6) { transform: rotate(20deg) translate(200px, -5px); z-index: 6; }
+.card:nth-child(7) { transform: rotate(30deg) translate(300px, -5px); z-index: 7; }
+*/
+
+.top-card {
+    transform: scale(0.7);  /* 80% に縮小 */
+}
+
