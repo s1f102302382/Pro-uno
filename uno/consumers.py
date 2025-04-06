@@ -115,7 +115,7 @@ class UNOConsumer(WebsocketConsumer):
             return self.next_turn(effect)
         return
  
-    
+    '''
     def next_turn(self, effect):
         print("next_turn関数に飛びました!")
         if (effect == "skip"):
@@ -149,6 +149,28 @@ class UNOConsumer(WebsocketConsumer):
             print("数字カードのため通常進行します")
             UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction) % len(UNOConsumer.players)
         #return self.players_turn[self.current_turn]
+    '''
+    def next_turn(self, effect):
+        print("next_turn関数に飛びました!")
+
+        if effect == "skip":
+            print("skipカードが出されました")
+            step = 2
+        elif effect == "reverse":
+            print("reverseカードが出されました")
+            if len(UNOConsumer.players_turn) == 2:
+                print("参加人数が二人のためreverseカードはskipカードと同じ効果を持つ")
+                step = 2
+            else:
+                UNOConsumer.direction *= -1
+                step = 1
+        else:
+            print(f"{effect}カードが出されました" if effect else "数字カードのため通常進行します")
+            step = 1
+
+        UNOConsumer.current_turn = (UNOConsumer.current_turn + UNOConsumer.direction * step) % len(UNOConsumer.players)
+
+
 
     def check_next_player_have_draw2_or_draw4(self, player, two_or_four):
         #self.hands[player]

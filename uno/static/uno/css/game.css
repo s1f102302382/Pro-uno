@@ -96,31 +96,7 @@ li:hover {
 }
 
 .card{
-    /*
-    position: absolute;
-    width: 80px;
-    height: 120px;
-    background-color: white;
-    border-radius: 10px;
-    border: 2px solid black;
-    box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
-    text-align: center;
-    font-size: 24px;
-    font-weight: bold;
-    line-height: 120px;
-    position: absolute;
-    bottom: 0;
-    left: 50%;
-    transform-origin: bottom center;
-    */
-    /*
-    width: 6rem;
-    aspect-ratio: 58 / 89;
-    background-color: #c00606;
-    box-shadow: 0 0 6px black;
-    border: 0.5rem white solid;
-    border-radius: 0.5rem;
-    */
+    transform: scale(0.7);  /* 80% に縮小 */
     width: 6rem;
     aspect-ratio: 58 / 89;
     background-color: #c00606;
@@ -129,7 +105,8 @@ li:hover {
     border-radius: 0.5rem;
 
     /* アーチ状に並べる */
-    --degree: calc((var(--index) - ((var(--length) - 1) / 2)) * 6deg);
+    /*--degree: calc((var(--index) - ((var(--length) - 1) / 2)) * 6deg);*/
+    --degree: calc((var(--index) - ((var(--length) - 1) / 2)) * 5deg);
     rotate: var(--degree);
     /*translate: 0 calc((1 - cos(var(--degree))) * 300%);*/
 
@@ -139,8 +116,12 @@ li:hover {
         calc(sin(var(--degree)) * 150%) 
         calc((1 - cos(var(--degree))) * 300%);
         */
+        /*
         calc(sin(var(--degree)) * 100%) 
         calc((1 - cos(var(--degree))) * 200%);
+        */
+        calc(sin(var(--degree)) * 150%) 
+        calc((1 - cos(var(--degree))) * 250%);
 }
 
 /* カードを扇状に配置 */
@@ -169,4 +150,8 @@ translate(x, y) ->
 .card:nth-child(6) { transform: rotate(20deg) translate(200px, -5px); z-index: 6; }
 .card:nth-child(7) { transform: rotate(30deg) translate(300px, -5px); z-index: 7; }
 */
+
+.top-card {
+    transform: scale(0.7);  /* 80% に縮小 */
+}
 
